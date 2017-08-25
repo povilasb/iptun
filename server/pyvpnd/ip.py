@@ -21,9 +21,7 @@ https://tools.ietf.org/html/rfc791#section-3.1
 
 from typing import List
 
-
-def ip_from_str(ip: str) -> List[int]:
-    return [int(n) for n in ip.split('.')]
+from pypacker.layer3.ip import IP
 
 
 def src_addr(packet: bytes) -> str:
@@ -32,12 +30,21 @@ def src_addr(packet: bytes) -> str:
 
 
 def set_src_addr(packet: bytearray, src_addr: str) -> None:
-    addr = ip_from_str(src_addr)
-    for i in range(12, 16):
-        packet[i] = addr[i - 12]
+    ip = IP(packet)
+    ip.src_s = src_addr
+    # TODO: find out how to avoid data copying
+    for i, b in enumerate(ip.bin()):
+        packet[i] = b
+
+
+def dst_addr(packet: bytes) -> str:
+    """Extracts src_addr field from IP packet."""
+    return '.'.join([str(n) for n in packet[16:20]])
 
 
 def set_dst_addr(packet: bytearray, dst_addr: str) -> None:
-    addr = ip_from_str(dst_addr)
-    for i in range(16, 20):
-        packet[i] = addr[i - 16]
+    ip = IP(packet)
+    ip.dst_s = dst_addr
+    # TODO: find out how to avoid data copying
+    for i, b in enumerate(ip.bin()):
+        packet[i] = b
