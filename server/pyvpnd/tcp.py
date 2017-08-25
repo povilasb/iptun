@@ -42,5 +42,8 @@ class Server:
             if len(packet) == 0:
                 break
 
-            logging.debug('tun0 send: %s', packet)
-            self._tun_dev.write(packet)
+            self.on_packet(packet)
+
+    def on_packet(self, packet: bytes) -> None:
+        logging.debug('tun0 send: %s', packet)
+        self._tun_dev.write(packet)
