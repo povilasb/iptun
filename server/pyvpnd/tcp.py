@@ -2,7 +2,7 @@ import socket
 from threading import Thread
 import logging
 
-from . import tun
+from . import tun, ip
 
 
 class Server:
@@ -12,6 +12,8 @@ class Server:
         self._addr = (bind_addr, bind_port)
         self._threads = []
         self._tun_dev = None
+
+        self.last_conn = None
 
     def route_traffic_to(self, tun_dev: tun.Device) -> 'Server':
         self._tun_dev = tun_dev
@@ -35,15 +37,32 @@ class Server:
             data = self._tun_dev.read()
             logging.debug('tun0 recv: %s', data)
 
+            client_conn = self._conn_by_dest(ip.dst_addr(data))
+            if client_conn is not None:
+                logging.debug('conn send: %s', data)
+                client_conn.send(data)
+
     def handle_connection(self, conn: socket.socket) -> None:
         logging.debug('New connection: %s', conn)
+        self.last_conn = conn
         while True:
             packet = conn.recv(4096)
             if len(packet) == 0:
                 break
 
-            self.on_packet(packet)
+            self.on_packet(packet, conn)
 
-    def on_packet(self, packet: bytes) -> None:
+    def on_packet(self, packet: bytes, conn: socket.socket) -> None:
+        packet = bytearray(packet)
+        src_ip = self._tun_ip_for(conn)
+        ip.set_src_addr(packet, src_ip)
         logging.debug('tun0 send: %s', packet)
         self._tun_dev.write(packet)
+
+    def _tun_ip_for(self, conn: socket.socket) -> str:
+        # TODO: assign IP by connection.
+        return '10.0.0.2'
+
+    def _conn_by_dest(self, ip: str) -> socket.socket:
+        if ip == '10.0.0.2':
+            return self.last_conn
