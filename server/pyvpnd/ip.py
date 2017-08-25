@@ -22,6 +22,22 @@ https://tools.ietf.org/html/rfc791#section-3.1
 from typing import List
 
 from pypacker.layer3.ip import IP
+from pypacker.layer3.ip6 import IP6
+
+
+def packet_version(packet: bytes) -> int:
+    return packet[0] >> 4
+
+
+def parse_packet(data: bytes) -> IP:
+    packet_ver = packet_version(data)
+    if packet_ver == 4:
+        packet = IP(data)
+    elif packet_ver == 6:
+        packet = IP6(data)
+    else:
+        raise Exception('Unsupported IP packet version: {packet_ver}')
+    return packet
 
 
 def src_addr(packet: bytes) -> str:

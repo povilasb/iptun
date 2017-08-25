@@ -35,12 +35,14 @@ class Server:
 
     def on_tun_recv(self) -> None:
         while True:
-            data = bytearray(self._tun_dev.read())
+            data = self._tun_dev.read()
             logging.debug('tun0 recv: %s', data)
 
-            client_conn = self._conn_by_dest(ip.dst_addr(data))
+            packet = ip.parse_packet(data)
+            client_conn = self._conn_by_dest(packet.dst_s)
             if client_conn is not None:
-                ip.set_dst_addr(data, self.orig_src_ip)
+                packet.dst_s = self.orig_src_ip
+                data = packet.bin()
                 logging.debug('conn send: %s', data)
                 client_conn.send(data)
 
