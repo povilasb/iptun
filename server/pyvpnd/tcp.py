@@ -1,5 +1,6 @@
 import socket
 from threading import Thread
+import logging
 
 from . import tun
 
@@ -32,14 +33,14 @@ class Server:
     def on_tun_recv(self) -> None:
         while True:
             data = self._tun_dev.read()
-            print('tun0 recv:', data)
+            logging.debug('tun0 recv: %s', data)
 
     def handle_connection(self, conn: socket.socket) -> None:
-        print('New connection:', conn)
+        logging.debug('New connection: %s', conn)
         while True:
             packet = conn.recv(4096)
             if len(packet) == 0:
                 break
 
-            print('tun0 send:', packet)
+            logging.debug('tun0 send: %s', packet)
             self._tun_dev.write(packet)
