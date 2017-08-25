@@ -14,6 +14,7 @@ class Server:
         self._tun_dev = None
 
         self.last_conn = None
+        self.orig_src_addr = None
 
     def route_traffic_to(self, tun_dev: tun.Device) -> 'Server':
         self._tun_dev = tun_dev
@@ -34,11 +35,12 @@ class Server:
 
     def on_tun_recv(self) -> None:
         while True:
-            data = self._tun_dev.read()
+            data = bytearray(self._tun_dev.read())
             logging.debug('tun0 recv: %s', data)
 
             client_conn = self._conn_by_dest(ip.dst_addr(data))
             if client_conn is not None:
+                ip.set_dst_addr(data, self.orig_src_ip)
                 logging.debug('conn send: %s', data)
                 client_conn.send(data)
 
@@ -54,8 +56,10 @@ class Server:
 
     def on_packet(self, packet: bytes, conn: socket.socket) -> None:
         packet = bytearray(packet)
-        src_ip = self._tun_ip_for(conn)
-        ip.set_src_addr(packet, src_ip)
+        self.orig_src_ip = ip.src_addr(packet)
+        new_src_ip = self._tun_ip_for(conn)
+        ip.set_src_addr(packet, new_src_ip)
+
         logging.debug('tun0 send: %s', packet)
         self._tun_dev.write(packet)
 
