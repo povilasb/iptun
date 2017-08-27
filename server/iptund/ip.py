@@ -19,8 +19,6 @@ https://tools.ietf.org/html/rfc791#section-3.1
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 """
 
-from typing import List
-
 from pypacker.layer3.ip import IP
 from pypacker.layer3.ip6 import IP6
 
