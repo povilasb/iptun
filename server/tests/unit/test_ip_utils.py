@@ -2,7 +2,7 @@ from hamcrest import assert_that, is_
 
 from pypacker.layer3.ip import IP
 
-from pyvpnd import ip
+from iptund import ip
 
 
 def describe_src_addr():

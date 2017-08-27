@@ -4,7 +4,7 @@ from . import tcp, tun, logs
 def main() -> None:
     logs.setup({
         'level': 'DEBUG',
-        'file': '/tmp/pyvpnd.log'
+        'file': '/tmp/iptund.log'
     })
 
     tun_dev = tun.Device('tun0', '10.0.0.1')

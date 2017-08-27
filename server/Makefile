@@ -1,4 +1,4 @@
-src_dir := pyvpnd
+src_dir := iptund
 
 python ?= python3.6
 virtualenv_dir := pyenv
