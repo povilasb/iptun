@@ -3,6 +3,9 @@ from typing import Tuple, List
 
 from IPy import IP
 
+from . import ip
+
+
 Address = Tuple[str, int]
 
 
@@ -42,3 +45,52 @@ class AddrAllocator:
 
 def make_ip_range(cidr_addrs: str) -> List[str]:
     return [str(addr) for addr in itertools.islice(IP(cidr_addrs), 2, None)]
+
+
+class NatRecord:
+    def __init__(self, client_tun_ip: str, server_tun_ip: str,
+                 client_addr: Address) -> None:
+        self.client_tun_ip = client_tun_ip
+        self.server_tun_ip = server_tun_ip
+        self.client_addr = client_addr
+
+
+class NAT:
+    """
+    Network Address Translator for packages going to and coming from TUN
+    interface.
+    """
+
+    def __init__(self) -> None:
+        self._records = {}
+
+    def out(self, packet: bytearray, server_tun_ip: str,
+            client_addr: Address) -> None:
+        """Do NAT for outgoing packet.
+
+        Changes packet source IP.
+        """
+        if self.record_by_server_tun_ip(server_tun_ip) is None:
+            self._records[server_tun_ip] = NatRecord(
+                ip.src_addr(packet),
+                server_tun_ip,
+                client_addr,
+            )
+        ip.set_src_addr(packet, server_tun_ip)
+
+    def in_(self, packet: bytearray) -> Address:
+        """Do NAT for incomming packet.
+
+        Translates packet destination IP.
+
+        Returns:
+            Client socket address to which the packet should be forwarded to.
+        """
+        server_tun_ip = ip.dst_addr(packet)
+        rec = self.record_by_server_tun_ip(server_tun_ip)
+        ip.set_dst_addr(packet, rec.client_tun_ip)
+        return rec.client_addr
+
+    def record_by_server_tun_ip(self, server_tun_ip: str) -> NatRecord:
+        if server_tun_ip in self._records:
+            return self._records[server_tun_ip]
