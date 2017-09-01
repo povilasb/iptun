@@ -44,7 +44,7 @@ class Server:
             client_addr = self._nat.in_(packet)
             if client_addr is not None:
                 logging.debug('conn send: %s', packet)
-                self._sock.send_to(packet, client_addr)
+                self._sock.sendto(packet, client_addr)
 
     def on_packet(self, packet: bytes, client_addr: net.Address) -> None:
         packet = bytearray(packet)
