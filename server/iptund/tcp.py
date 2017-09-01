@@ -2,14 +2,18 @@ import socket
 from threading import Thread
 import logging
 import itertools
+from typing import Tuple
 
 from IPy import IP
 
 from . import tun, ip
 
 
+UdpAddr = Tuple[str, int]
+
+
 class ClientConnection:
-    def __init__(self, sock: socket.socket) -> None:
+    def __init__(self, sock: UdpAddr) -> None:
         self.sock = sock
         self.local_ip = None
 
@@ -52,7 +56,7 @@ class NAT:
 
 class Server:
     def __init__(self, bind_port: int, bind_addr: str='0.0.0.0') -> None:
-        self._sock = socket.socket()
+        self._sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self._sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self._addr = (bind_addr, bind_port)
         self._threads = []
@@ -66,15 +70,14 @@ class Server:
 
     def start(self) -> None:
         self._sock.bind(self._addr)
-        self._sock.listen(65535)
 
         self._tun_read_thread = Thread(target=self.on_tun_recv)
         self._tun_read_thread.start()
 
         while True:
-            conn, _ = self._sock.accept()
-            conn = ClientConnection(conn)
-            new_thread = Thread(target=self.handle_connection, args=(conn,))
+            packet, addr = self._sock.recvfrom(4096)
+            conn = ClientConnection(addr)
+            new_thread = Thread(target=self.on_packet, args=(packet, conn,))
             self._threads.append(new_thread)
             new_thread.start()
 
@@ -89,18 +92,9 @@ class Server:
                 packet.dst_s = client_conn.local_ip
                 data = packet.bin()
                 logging.debug('conn send: %s', data)
-                client_conn.send(data)
+                self._sock.send_to(data, client_conn.sock)
 
-    def handle_connection(self, conn: ClientConnection) -> None:
-        logging.debug('New connection: %s', conn)
-        while True:
-            packet = conn.recv(4096)
-            if len(packet) == 0:
-                break
-
-            self.on_packet(packet, conn)
-
-    def on_packet(self, packet: bytes, conn: ClientConnection) -> None:
+    def on_packet(self, packet: bytes, conn: UdpAddr) -> None:
         packet = bytearray(packet)
         conn.capture_local_ip(packet)
         new_src_ip = self._nat.alloc_addr_for(conn)
