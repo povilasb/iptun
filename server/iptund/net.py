@@ -70,12 +70,11 @@ class NAT:
 
         Changes packet source IP.
         """
-        if self.record_by_server_tun_ip(server_tun_ip) is None:
-            self._records[server_tun_ip] = NatRecord(
-                ip.src_addr(packet),
-                server_tun_ip,
-                client_addr,
-            )
+        self._records[server_tun_ip] = NatRecord(
+            ip.src_addr(packet),
+            server_tun_ip,
+            client_addr,
+        )
         ip.set_src_addr(packet, server_tun_ip)
 
     def in_(self, packet: bytearray) -> Address:
