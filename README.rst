@@ -47,6 +47,33 @@ Overview
 
 Where `tun0` is virtual network device.
 
+Server
+======
+
+First of all the server must be started::
+
+    $ make pyenv
+    $ sudo pyenv/bin/python -m iptun.server
+
+Currently it's accepting packets over UDP port 3000.
+
+Client
+======
+
+Once the server is ready to relay packets, we can start the client::
+
+    $ make pyenv
+    $ sudo pyenv/bin/python -m iptun.client
+
+By default no routes are configured, they should be added manually.
+E.g. to route all traffic through our tunnel, execute::
+
+    $ sudo ip route add default via 10.1.0.1
+
+To route traffic to specific destination, execute::
+
+    $ sudo ip route add 1.2.3.4 via 10.1.0.1
+
 References
 ==========
 
