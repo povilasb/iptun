@@ -46,3 +46,9 @@ Overview
                        +---------+           +---------+
 
 Where `tun0` is virtual network device.
+
+References
+==========
+
+.. [f1] http://blog.povilasb.com/posts/linux-virtual-network-devices/
+.. [f2] http://blog.povilasb.com/posts/linux-network-routing-table/
