@@ -4,8 +4,13 @@ import socket
 from . import tun
 
 
+def src_addr(packet: bytes) -> str:
+    """Extracts src_addr field from IP packet."""
+    return '.'.join([str(n) for n in packet[12:16]])
+
+
 def main() -> None:
-    server_addr = ('127.0.0.1', 3000)
+    server_addr = ('86.100.203.141', 3000)
 
     tun_dev = tun.Device('tun1', '10.1.0.1')
     tun_dev.up()
@@ -16,6 +21,8 @@ def main() -> None:
 
     while True:
         packet = tun_dev.read()
+        print(src_addr(packet))
+        # TODO: save packets to pcap file
         server_sock.sendto(packet, server_addr)
 
     read_thread.join()

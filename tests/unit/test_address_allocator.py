@@ -1,6 +1,6 @@
 from hamcrest import assert_that, is_, not_, equal_to, calling, raises
 
-from iptund import net
+from iptun import net
 
 
 def describe_AddrAllocator():

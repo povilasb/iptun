@@ -1,6 +1,6 @@
 from hamcrest import assert_that, is_
 
-from iptund import net
+from iptun import net
 
 
 def describe_make_ip_range():
